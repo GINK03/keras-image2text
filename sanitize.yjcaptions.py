@@ -44,11 +44,38 @@ def make_caption_dataset():
   
   """ 177字が最高らしい """
 
+# char <-> index
+def char_index():
+  c_f = {}
+  id_capkana = pickle.loads( open("dataset/id_capkana.pkl", "rb").read() )
+  buff = []
+  for vs in id_capkana.values():
+    [ buff.append( v[1] ) for v in  vs ]
+  for c in "".join( buff ):
+    if c_f.get(c) is None: 
+      c_f[c] = 0
+    c_f[c] += 1
+
+  c_i = {}
+  for e, (c, f) in enumerate(sorted(c_f.items(), key=lambda x:x[1]*-1)[:128]):
+    print(c, f)
+    c_i[c] = e
+
+  neo_id_capkana = {}
+  for i, vs in id_capkana.items():
+    neovs = []
+    for v in vs: 
+      neokana = "".join( filter(lambda x: x in c_f.keys(), list(v[1]) ) )
+      neovs.append( (v[0], neokana) )
+    neo_id_capkana[i] = neovs
+  open("id_capkana.screened.pkl", "wb").write( pickle.dumps(neo_id_capkana) )
+  open("c_i.pkl", "wb").write( pickle.dumps(c_i) )
+
 # リサイズとimageのpickle化
 from PIL import Image
 def resize_serialize():
   target_size = (150, 150)
-  id_capkana  = pickle.loads( open("id_capkana.pkl", "rb").read() )
+  id_capkana  = pickle.loads( open("id_capkana.screened.pkl", "rb").read() )
   num_names   = [(re.search(r"(\d{1,})\.jpg", line).group(1), line) for line \
       in glob.glob("../coco2014/train2014/*.jpg")]  
  
@@ -58,7 +85,7 @@ def resize_serialize():
     if id_capkana.get(id) is not None:
       #print( id_capkana.get(id)  )
       #print( file ) 
-      target_size = (224,224)
+      target_size = (150, 150)
       for ei, (jp, kana) in enumerate(id_capkana.get(id)):
         img   = Image.open( file )
         w, h  = img.size
@@ -81,13 +108,14 @@ def resize_serialize():
 
 
     
-
-
 if __name__ == '__main__':
   if '--step1' in sys.argv:
     make_caption_dataset()
 
   if '--step2' in sys.argv:
+    char_index()
+
+  if '--step3' in sys.argv:
     resize_serialize()
 
 

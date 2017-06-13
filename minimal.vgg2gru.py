@@ -18,17 +18,17 @@ import copy
 import os
 import re
 input_tensor = Input(shape=(150, 150, 3))
+    #print( vars( autoencoder.optimizer.lr  ) )
 vgg_model = VGG16(include_top=False, weights='imagenet', input_tensor=input_tensor)
 vgg_x     = vgg_model.layers[-1].output
 vgg_x     = BN()(vgg_x)
 vgg_x     = Dense(512)(vgg_x)
 vgg_x     = Flatten()(vgg_x)
 vgg_x     = Dense(512)(vgg_x)
-DIM         = 1024
-timesteps   = 50
+"""
 inputs      = Input(shape=(timesteps, DIM))
 encoded     = GRU(512)(inputs)
-print(encoded.shape)
+"""
 print(vgg_x.shape)
 """
 attを無効にするには、encodedをRepeatVectorに直接入力する 
@@ -36,9 +36,18 @@ encoderのModelの入力をmulではなく、encodedにする
 """
 encoder     = Model(input_tensor, vgg_x)
 
+"""
+計算コスト削減のため、省略する
+"""
+for layer in encoder.layers[:12]: # default 15
+  print( layer )
+  layer.trainable = False
+
 """ encoder側は、基本的にRNNをスタックしない """
+timesteps   = 100
+DIM         = 128
 x           = RepeatVector(timesteps)(vgg_x)
-x           = Bi(GRU(256*2, return_sequences=True))(x)
+x           = Bi(LSTM(512, return_sequences=True))(x)
 #x           = LSTM(512, return_sequences=True)(x)
 decoded     = TD(Dense(DIM, activation='softmax'))(x)
 
@@ -53,34 +62,30 @@ def callbacks(epoch, logs):
   print("logs", logs)
 
 def train():
-  c_i = pickle.loads( open("dataset/c_i.pkl", "rb").read() )
+  c_i = pickle.loads( open("c_i.pkl", "rb").read() )
+  i_c = {i:c for c,i in c_i.items() }
   xss = []
   yss = []
-  with open("dataset/wakati.distinct.txt", "r") as f:
-    for fi, line in enumerate(f):
-      print("now iter ", fi)
-      if fi >= 1500: 
-        break
-      line = line.strip()
-      try:
-        head, tail = line.split("___SP___")
-      except ValueError as e:
-        print(e)
-        continue
+  for gi, pkl in enumerate(glob.glob("data/*.pkl")):
+    if gi > 1000:
+      break
+    o    = pickle.loads( open(pkl, "rb").read() )
+    img  = o["image"] 
+    kana = o["kana"]
+    print( kana )
+    xss.append( np.array(img) )
+    ys    = [[0. for i in range(128) ] for j in range(100)]
 
-      xs = [ [0.]*DIM for _ in range(50) ]
-      for i, c in enumerate(head): 
-        xs[i][c_i[c]] = 1.
-      ... #print(np.array( list(reversed(xs)) ).shape)
-      xss.append( np.array( list(reversed(xs)) ) )
-      
-      ys = [ [0.]*DIM for _ in range(50) ]
-      for i, c in enumerate(tail): 
-        ys[i][c_i[c]] = 1.
-      yss.append( np.array( ys ) )
+    for i,k in enumerate(list(kana[:100])):
+      try:
+        ys[i][c_i[k]] = 1.
+      except KeyError as e:
+        print(e)
+    yss.append( ys )
   Xs = np.array( xss )
   Ys = np.array( yss )
   print(Xs.shape)
+  #sys.exit()
   if '--resume' in sys.argv:
     model = sorted( glob.glob("models/*.h5") ).pop(0)
     print("loaded model is ", model)
@@ -91,12 +96,10 @@ def train():
   for i in range(2000):
     
     print_callback = LambdaCallback(on_epoch_end=callbacks)
-    batch_size = random.randint( 32, 64 )
+    batch_size = 32#random.randint( 32, 64 )
     random_optim = random.choice( [Adam(), SGD(), RMSprop()] )
-    #print( vars( autoencoder.optimizer.lr  ) )
     print( random_optim )
     autoencoder.optimizer = random_optim
-    #sys.exit()
     autoencoder.fit( Xs, Ys,  shuffle=True, batch_size=batch_size, epochs=1, callbacks=[print_callback] )
     autoencoder.save("models/%9f_%09d.h5"%(buff['loss'], i))
     print("saved ..")
