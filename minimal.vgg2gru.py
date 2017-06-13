@@ -1,14 +1,14 @@
-from keras.layers     import Input, Dense, GRU, LSTM, RepeatVector
-from keras.models     import Model
-from keras.layers.core import Flatten
-from keras.callbacks  import LambdaCallback 
-from keras.optimizers import SGD, RMSprop, Adam
-from keras.layers.wrappers import Bidirectional as Bi
-from keras.layers.wrappers import TimeDistributed as TD
-from keras.layers          import merge
-from keras.applications.vgg16 import VGG16 
+from keras.layers               import Input, Dense, GRU, LSTM, RepeatVector
+from keras.models               import Model
+from keras.layers.core          import Flatten
+from keras.callbacks            import LambdaCallback 
+from keras.optimizers           import SGD, RMSprop, Adam
+from keras.layers.wrappers      import Bidirectional as Bi
+from keras.layers.wrappers      import TimeDistributed as TD
+from keras.layers               import merge
+from keras.applications.vgg16   import VGG16 
 from keras.layers.normalization import BatchNormalization as BN
-
+from keras.layers.noise         import GaussianNoise as GN
 import numpy as np
 import random
 import sys
@@ -21,10 +21,11 @@ input_tensor = Input(shape=(150, 150, 3))
     #print( vars( autoencoder.optimizer.lr  ) )
 vgg_model = VGG16(include_top=False, weights='imagenet', input_tensor=input_tensor)
 vgg_x     = vgg_model.layers[-1].output
-vgg_x     = BN()(vgg_x)
+#vgg_x     = BN()(vgg_x)
 vgg_x     = Dense(512)(vgg_x)
 vgg_x     = Flatten()(vgg_x)
 vgg_x     = Dense(512)(vgg_x)
+#vgg_x     = GN(0.01)(vgg_x)
 """
 inputs      = Input(shape=(timesteps, DIM))
 encoded     = GRU(512)(inputs)
@@ -39,7 +40,7 @@ encoder     = Model(input_tensor, vgg_x)
 """
 計算コスト削減のため、省略する
 """
-for layer in encoder.layers[:12]: # default 15
+for layer in encoder.layers[:15]: # default 15
   print( layer )
   layer.trainable = False
 
@@ -93,15 +94,18 @@ def train():
 
     """ 確実に更新するため、古いデータは消す """
     #os.system("rm models/*")
+  optims = [Adam()]
   for i in range(2000):
     
     print_callback = LambdaCallback(on_epoch_end=callbacks)
-    batch_size = 32#random.randint( 32, 64 )
-    random_optim = random.choice( [Adam(), SGD(), RMSprop()] )
+    batch_size = random.choice( [16, 32, 64] )
+    random_optim = random.choice( [Adam()] )
     print( random_optim )
     autoencoder.optimizer = random_optim
     autoencoder.fit( Xs, Ys,  shuffle=True, batch_size=batch_size, epochs=1, callbacks=[print_callback] )
     autoencoder.save("models/%9f_%09d.h5"%(buff['loss'], i))
+    lossrate = buff["loss"]
+    os.system("echo \"{}\" `date` >> loss.log".format(lossrate))
     print("saved ..")
     print("logs...", buff )
 
