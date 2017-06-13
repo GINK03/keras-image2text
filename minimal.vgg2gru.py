@@ -6,6 +6,9 @@ from keras.optimizers import SGD, RMSprop, Adam
 from keras.layers.wrappers import Bidirectional as Bi
 from keras.layers.wrappers import TimeDistributed as TD
 from keras.layers          import merge
+from keras.applications.vgg16 import VGG16 
+from keras.layers.normalization import BatchNormalization as BN
+
 import numpy as np
 import random
 import sys
@@ -14,27 +17,32 @@ import glob
 import copy
 import os
 import re
-
+input_tensor = Input(shape=(150, 150, 3))
+vgg_model = VGG16(include_top=False, weights='imagenet', input_tensor=input_tensor)
+vgg_x     = vgg_model.layers[-1].output
+vgg_x     = BN()(vgg_x)
+vgg_x     = Dense(512)(vgg_x)
+vgg_x     = Flatten()(vgg_x)
+vgg_x     = Dense(512)(vgg_x)
 DIM         = 1024
 timesteps   = 50
 inputs      = Input(shape=(timesteps, DIM))
 encoded     = GRU(512)(inputs)
+print(encoded.shape)
+print(vgg_x.shape)
 """
 attを無効にするには、encodedをRepeatVectorに直接入力する 
 encoderのModelの入力をmulではなく、encodedにする
 """
-inputs_a    = Input(shape=(timesteps, DIM))
-a_vector    = Dense(512, activation='softmax')(Flatten()(inputs))
-mul         = merge([encoded, a_vector],  mode='mul') 
-encoder     = Model(inputs, mul)
+encoder     = Model(input_tensor, vgg_x)
 
 """ encoder側は、基本的にRNNをスタックしない """
-x           = RepeatVector(timesteps)(mul)
+x           = RepeatVector(timesteps)(vgg_x)
 x           = Bi(GRU(256*2, return_sequences=True))(x)
 #x           = LSTM(512, return_sequences=True)(x)
 decoded     = TD(Dense(DIM, activation='softmax'))(x)
 
-autoencoder = Model(inputs, decoded)
+autoencoder = Model(input_tensor, decoded)
 autoencoder.compile(optimizer=Adam(), loss='categorical_crossentropy')
 
 buff = None
