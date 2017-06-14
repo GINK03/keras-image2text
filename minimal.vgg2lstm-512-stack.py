@@ -18,29 +18,20 @@ import copy
 import os
 import re
 input_tensor = Input(shape=(150, 150, 3))
-    #print( vars( autoencoder.optimizer.lr  ) )
 vgg_model = VGG16(include_top=False, weights='imagenet', input_tensor=input_tensor)
 vgg_x     = vgg_model.layers[-1].output
-#vgg_x     = BN()(vgg_x)
 vgg_x     = Flatten()(vgg_x)
-vgg_x     = Dense(256)(vgg_x)
-#vgg_x     = Dense(256)(vgg_x)
-#vgg_x     = GN(0.01)(vgg_x)
+vgg_x     = Dense(512)(vgg_x)
 """
 inputs      = Input(shape=(timesteps, DIM))
 encoded     = GRU(512)(inputs)
 """
 print(vgg_x.shape)
-"""
-attを無効にするには、encodedをRepeatVectorに直接入力する 
-encoderのModelの入力をmulではなく、encodedにする
-"""
 DIM         = 128
 timesteps   = 50
-#inputs      = Input(shape=(timesteps, DIM))
 print(vgg_x.shape)
 inputs      = RepeatVector(timesteps)(vgg_x)
-encoded     = GRU(256)(inputs)
+encoded     = LSTM(512)(inputs)
 encoder     = Model(input_tensor, encoded)
 
 
@@ -48,7 +39,7 @@ encoder     = Model(input_tensor, encoded)
 timesteps   = 50
 DIM         = 128
 x           = RepeatVector(timesteps)(encoded)
-x           = Bi(LSTM(256, return_sequences=True))(x)
+x           = Bi(LSTM(512, return_sequences=True))(x)
 #x           = LSTM(512, return_sequences=True)(x)
 decoded     = TD(Dense(DIM, activation='softmax'))(x)
 
@@ -102,7 +93,7 @@ def train():
   xss = []
   yss = []
   for gi, pkl in enumerate(glob.glob("data/*.pkl")):
-    if gi > 25:
+    if gi > 500:
       break
     o    = pickle.loads( open(pkl, "rb").read() )
     img  = o["image"] 
