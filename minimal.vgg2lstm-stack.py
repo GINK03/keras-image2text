@@ -21,7 +21,7 @@ input_tensor = Input(shape=(150, 150, 3))
 vgg_model = VGG16(include_top=False, weights='imagenet', input_tensor=input_tensor)
 vgg_x     = vgg_model.layers[-1].output
 vgg_x     = Flatten()(vgg_x)
-vgg_x     = Dense(512)(vgg_x)
+vgg_x     = Dense(256)(vgg_x)
 """
 inputs      = Input(shape=(timesteps, DIM))
 encoded     = GRU(512)(inputs)
@@ -31,7 +31,7 @@ DIM         = 128
 timesteps   = 50
 print(vgg_x.shape)
 inputs      = RepeatVector(timesteps)(vgg_x)
-encoded     = LSTM(512)(inputs)
+encoded     = LSTM(256)(inputs)
 encoder     = Model(input_tensor, encoded)
 
 
@@ -39,7 +39,7 @@ encoder     = Model(input_tensor, encoded)
 timesteps   = 50
 DIM         = 128
 x           = RepeatVector(timesteps)(encoded)
-x           = Bi(LSTM(512, return_sequences=True))(x)
+x           = Bi(LSTM(256, return_sequences=True))(x)
 #x           = LSTM(512, return_sequences=True)(x)
 decoded     = TD(Dense(DIM, activation='softmax'))(x)
 
@@ -131,7 +131,7 @@ def train():
 
   for i in range(2000):
     print_callback = LambdaCallback(on_epoch_end=callbacks)
-    batch_size = random.choice( [4] )
+    batch_size = random.choice( [8] )
     random_optim = random.choice( optims )
     print( random_optim )
     t2i.optimizer = random_optim
