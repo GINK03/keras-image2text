@@ -47,7 +47,7 @@ encoder     = Model(input_tensor, encoded)
 """ encoder側は、基本的にRNNをスタックしない """
 timesteps   = 50
 DIM         = 128
-x           = RepeatVector(timesteps)(vgg_x)
+x           = RepeatVector(timesteps)(encoded)
 x           = Bi(LSTM(256, return_sequences=True))(x)
 #x           = LSTM(512, return_sequences=True)(x)
 decoded     = TD(Dense(DIM, activation='softmax'))(x)
@@ -85,7 +85,7 @@ t2i.compile(optimizer=Adam(), loss='categorical_crossentropy')
 for i, layer in enumerate(t2i.layers): # default 15
   print( i, layer )
 
-for layer in t2i.layers[:14]:
+for layer in t2i.layers[:18]:
   layer.trainable = False
   ...
 
