@@ -10,13 +10,13 @@ from keras.applications.vgg16   import VGG16
 from keras.layers.normalization import BatchNormalization as BN
 from keras.layers.noise         import GaussianNoise as GN
 import numpy as np
-import random
-import sys
+
 import pickle
 import glob
 import copy
 import os
 import re
+from PIL import Image
 input_tensor = Input(shape=(150, 150, 3))
 vgg_model    = VGG16(include_top=False, weights='imagenet', input_tensor=input_tensor)
 vgg_x        = vgg_model.layers[-1].output
@@ -138,6 +138,7 @@ def predict():
   xss   = []
   yss   = []
   heads = []
+  origs = []
   for gi, pkl in enumerate(glob.glob("data/*.pkl")):
     if gi > 500:
       break
@@ -147,7 +148,8 @@ def predict():
     print( kana )
     xss.append( np.array(img) )
     ys    = [[0. for i in range(128) ] for j in range(50)]
-
+    
+    origs.append( img )
     heads.append( kana[:50] )
     for i,k in enumerate(list(kana[:50])):
       try:
@@ -161,13 +163,14 @@ def predict():
   t2i.load_weights(model)
 
   Ys = t2i.predict( Xs ).tolist()
-  for head, y in zip(heads, Ys):
+  for orig, head, y in zip(origs, heads, Ys):
     terms = []
     for v in y:
       term = max( [(s, i_c[i]) for i,s in enumerate(v)] , key=lambda x:x[0])[1]
       terms.append( term )
-    tail = re.sub(r"」.*?$", "」", "".join( terms ) )
+    tail = re.sub(r"。.*?$", "。", "".join( terms ) )
     print( head, "___SP___", tail )
+    orig.save("predicts/{}.png".format(tail))
 if __name__ == '__main__':
   if '--test' in sys.argv:
     test()
