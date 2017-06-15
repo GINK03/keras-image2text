@@ -10,28 +10,25 @@ from keras.applications.vgg16   import VGG16
 from keras.layers.normalization import BatchNormalization as BN
 from keras.layers.noise         import GaussianNoise as GN
 import numpy as np
-
+import sys
 import pickle
 import glob
 import copy
 import os
 import re
+import random
 from PIL import Image
+
 input_tensor = Input(shape=(150, 150, 3))
 vgg_model    = VGG16(include_top=False, weights='imagenet', input_tensor=input_tensor)
 vgg_x        = vgg_model.layers[-1].output
 vgg_x        = Flatten()(vgg_x)
-vgg_x        = Dense(768)(vgg_x)
-"""
-inputs      = Input(shape=(timesteps, DIM))
-encoded     = GRU(512)(inputs)
-"""
-print(vgg_x.shape)
+vgg_x        = Dense(1024)(vgg_x)
+
 DIM         = 128
 timesteps   = 50
-print(vgg_x.shape)
 inputs      = RepeatVector(timesteps)(vgg_x)
-encoded     = LSTM(768)(inputs)
+encoded     = LSTM(1024)(inputs)
 encoder     = Model(input_tensor, encoded)
 
 
@@ -39,7 +36,7 @@ encoder     = Model(input_tensor, encoded)
 timesteps   = 50
 DIM         = 128
 x           = RepeatVector(timesteps)(encoded)
-x           = Bi(LSTM(768, return_sequences=True))(x)
+x           = Bi(LSTM(1024, return_sequences=True))(x)
 decoded     = TD(Dense(DIM, activation='softmax'))(x)
 
 t2i         = Model(input_tensor, decoded)
@@ -92,8 +89,8 @@ def train():
   xss = []
   yss = []
   for gi, pkl in enumerate(glob.glob("data/*.pkl")):
-    if gi > 500:
-      break
+    #if gi > 2000:
+    #  break
     o    = pickle.loads( open(pkl, "rb").read() )
     img  = o["image"] 
     kana = o["kana"]
@@ -109,8 +106,6 @@ def train():
     yss.append( ys )
   Xs = np.array( xss )
   Ys = np.array( yss )
-  print(Xs.shape)
-  #optims = [Adam(lr=0.001), SGD(lr=0.01)]
   optims = [Adam(), SGD(), RMSprop()]
   if '--resume' in sys.argv:
     optims = [Adam(lr=0.0005), SGD(lr=0.005)]
