@@ -84,7 +84,7 @@ loss-function : softmax + categorical-crossentropy
 <div align="center"> 図3. うまく言った例</div>
 
 ## コード
-[github.com](https://github.com/GINK03/keras-image2text)
+[github.com](https://github.com/GINK03/keras-image2text)  
 (コードに関しては、MITライセンスとかにしたいと思います。再利用していただいて構いません)
 
 ## 参考文献
