@@ -77,12 +77,15 @@ loss-function : softmax + categorical-crossentropy
 テストデータに関して汎化が十分になく、30000件ほどしか学習データが確保できませんでした  
 
 そのため、未知の学習データセットで、まだ十分に汎化が確保できていません。大学の研究や、国家機関、大企業などがやると良いかもしれません  
-(コードに関しては、非商用利用に限り、再利用していただいて構いません)
 
 <p align="center">
   <img width="700px" src="https://user-images.githubusercontent.com/4949982/27253023-5e46f0e6-53a6-11e7-8cc5-6459e8bc9cd7.png">
 </p>
 <div align="center"> 図3. うまく言った例</div>
+
+## コード
+[github.com](https://github.com/GINK03/keras-image2text)
+(コードに関しては、MITライセンスとかにしたいと思います。再利用していただいて構いません)
 
 ## 参考文献
 - [1] [Show and Tell: A Neural Image Caption Generator](http://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Vinyals_Show_and_Tell_2015_CVPR_paper.pdf)
