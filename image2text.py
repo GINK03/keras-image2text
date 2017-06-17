@@ -40,37 +40,10 @@ decoded     = TD(Dense(DIM, activation='softmax'))(x)
 t2i         = Model(input_tensor, decoded)
 t2i.compile(optimizer=Adam(), loss='categorical_crossentropy')
 
-"""
-0 <keras.engine.topology.InputLayer object at 0x7f9ecfcea4a8>
-1 <keras.layers.convolutional.Conv2D object at 0x7f9ece6220f0>
-2 <keras.layers.convolutional.Conv2D object at 0x7f9e8deb02e8>
-3 <keras.layers.pooling.MaxPooling2D object at 0x7f9e8de4ee10>
-4 <keras.layers.convolutional.Conv2D object at 0x7f9e8de58550>
-5 <keras.layers.convolutional.Conv2D object at 0x7f9e8de62e10>
-6 <keras.layers.pooling.MaxPooling2D object at 0x7f9e8de6bf60>
-7 <keras.layers.convolutional.Conv2D object at 0x7f9e8ddfe5c0>
-8 <keras.layers.convolutional.Conv2D object at 0x7f9e8de06c50>
-9 <keras.layers.convolutional.Conv2D object at 0x7f9e8de0dfd0>
-10 <keras.layers.pooling.MaxPooling2D object at 0x7f9e8de20cc0>
-11 <keras.layers.convolutional.Conv2D object at 0x7f9e8de29f98>
-12 <keras.layers.convolutional.Conv2D object at 0x7f9e8ddbb5f8>
-13 <keras.layers.convolutional.Conv2D object at 0x7f9e8ddc3eb8>
-14 <keras.layers.pooling.MaxPooling2D object at 0x7f9e8ddd6d30>
-15 <keras.layers.convolutional.Conv2D object at 0x7f9e8ddde630>
-16 <keras.layers.convolutional.Conv2D object at 0x7f9e8dde6ef0>
-17 <keras.layers.convolutional.Conv2D object at 0x7f9e8ddef588>
-18 <keras.layers.pooling.MaxPooling2D object at 0x7f9e8dd81f60>
-19 <keras.layers.core.Dense object at 0x7f9e8dd94a90>
-20 <keras.layers.core.Flatten object at 0x7f9e8dd9c908>
-21 <keras.layers.core.Dense object at 0x7f9e8dd9c6d8>
-22 <keras.layers.core.RepeatVector object at 0x7f9e8dcf3978>
-23 <keras.layers.wrappers.Bidirectional object at 0x7f9e8dcfd9b0>
-24 <keras.layers.wrappers.TimeDistributed object at 0x7f9e8dba6ac8>
-"""
 for i, layer in enumerate(t2i.layers): # default 15
   print( i, layer )
 
-for layer in t2i.layers[:18]:
+for layer in t2i.layers[:18]: # 18 is max of VGG16
   layer.trainable = False
   ...
 
