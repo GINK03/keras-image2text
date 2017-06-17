@@ -1,6 +1,9 @@
 # Keras im2txt (Show and Tell)
 
 ## Kerasでのim2txtの実装系
+TensorFlowの有名な例である、im2txt(Show and Tell)の実装系をGoogleの識別ネットワークのGoogLeNetではなく、VGG16というモデルを用い、
+VGG16はもとの1000クラス識別問題に最適化されたプリトレインドモデルを用いるなどをして、計算負荷を下げたモデルを構築しました  
+日本語を出力するネットワークはまだわたしも知らないので、あまり見たことがないネットワークかもしれません  
 
 ## Tensorflowとの違い
 - 学習できる
