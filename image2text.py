@@ -26,13 +26,11 @@ vgg_x        = Flatten()(vgg_x)
 vgg_x        = Dense(1024)(vgg_x)
 
 DIM         = 128
-timesteps   = 50
+timesteps   = 10
 inputs      = RepeatVector(timesteps)(vgg_x)
 encoded     = LSTM(1024)(inputs)
 encoder     = Model(input_tensor, encoded)
 
-
-""" encoder側は、基本的にRNNをスタックしない """
 timesteps   = 50
 DIM         = 128
 x           = RepeatVector(timesteps)(encoded)
@@ -89,8 +87,8 @@ def train():
   xss = []
   yss = []
   for gi, pkl in enumerate(glob.glob("data/*.pkl")):
-    #if gi > 2000:
-    #  break
+    if gi > 3000:
+      break
     o    = pickle.loads( open(pkl, "rb").read() )
     img  = o["image"] 
     kana = o["kana"]
@@ -108,18 +106,18 @@ def train():
   Ys = np.array( yss )
   optims = [Adam(), SGD(), RMSprop()]
   if '--resume' in sys.argv:
-    optims = [Adam(lr=0.0005), SGD(lr=0.005)]
+    #optims = [Adam(lr=0.0005), SGD(lr=0.005)]
     model = sorted( glob.glob("models/*.h5") ).pop(0)
     print("loaded model is ", model)
     t2i.load_weights(model)
 
   for i in range(2000):
     print_callback = LambdaCallback(on_epoch_end=callbacks)
-    batch_size = random.choice( [8] )
+    batch_size = random.choice( [32, 64, 128] )
     random_optim = random.choice( optims )
     print( random_optim )
     t2i.optimizer = random_optim
-    t2i.fit( Xs, Ys,  shuffle=True, batch_size=batch_size, epochs=20, callbacks=[print_callback] )
+    t2i.fit( Xs, Ys,  shuffle=True, batch_size=batch_size, epochs=5, callbacks=[print_callback] )
     if i%2 == 0:
       t2i.save("models/%9f_%09d.h5"%(buff['loss'], i))
     lossrate = buff["loss"]
